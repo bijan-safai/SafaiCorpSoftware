@@ -5,11 +5,12 @@ public Program()
 {
     OutPanel = GridTerminalSystem.GetBlockWithName("progout") as IMyTextPanel;
     Ant = GridTerminalSystem.GetBlockWithName("ant") as IMyRadioAntenna;
-    IGC.RegisterBroadcastListener("hello");
+    IGC.RegisterBroadcastListener("testbroadcast");
     List<IMyBroadcastListener> listners = new List<IMyBroadcastListener>();
     IGC.GetBroadcastListeners(listners);
     listners[0].SetMessageCallback("yeet");
-    
+    IGC.UnicastListener.SetMessageCallback("uni");
+
     Ant.AttachedProgrammableBlock = Me.EntityId;
 }
 
@@ -32,16 +33,32 @@ public void Save()
 public void Main(string argument, UpdateType updateSource)
 {
 
-    List<IMyBroadcastListener> listners = new List<IMyBroadcastListener>();
-    IGC.GetBroadcastListeners(listners);
-    if(listners[0].HasPendingMessage)
+    if(argument == "yeet")
     {
-        MyIGCMessage message = listners[0].AcceptMessage();
-        OutPanel.WriteText(message.Data.ToString(), false);
+        List<IMyBroadcastListener> listners = new List<IMyBroadcastListener>();
+        IGC.GetBroadcastListeners(listners);
+        if(listners[0].HasPendingMessage)
+        {
+            MyIGCMessage message = listners[0].AcceptMessage();
+            OutPanel.WriteText(message.Data.ToString(), false);
+        }
+    }
+
+    if(argument == "uni")
+    {
+        if(IGC.UnicastListener.HasPendingMessage)
+        {
+            MyIGCMessage message = IGC.UnicastListener.AcceptMessage();
+            OutPanel.WriteText(message.Tag + "\n", false);
+            OutPanel.WriteText(message.Data.ToString(), true);
+        }
     }
 
     if(argument == "send")
     {
-        IGC.SendBroadcastMessage("hello", "HELLO WORLD", TransmissionDistance.TransmissionDistanceMax);
+        long address = 110010918201879565;
+        IGC.SendUnicastMessage(address, $"Pass/Uni/{IGC.Me}/testuincast", "this is testing unicast passthrough");
+        //IGC.SendBroadcastMessage("Aquire_SafNetTest_UnicastId", "HELLO WORLD", TransmissionDistance.TransmissionDistanceMax);
+        OutPanel.WriteText("Sending...", false);
     }
 }

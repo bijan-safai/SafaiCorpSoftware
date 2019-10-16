@@ -93,7 +93,7 @@ private class RoutingSatUnicastMessageHandler
             {
                 case "Pass" : PassThrough(tokenizedMessage, rawMessage); break;
                 case "Script" : throw new System.Exception("Sat has no scripts defined"); //ExecuteScript(tokenizedMessage, rawMessage); break; <--- uncomment when scripts are implemented
-                case "Ping" : IGC.SendUnicastMessage(rawMessage.Source, $"Ping/{SatName}", (object) SafNetVer); break;
+                case "Ping" : IGC.SendUnicastMessage(rawMessage.Source, $"Ping/{SatName}", SafNetVer); break;
                 default: throw new System.Exception($"Invalid toplevel tag {tokenizedMessage[0]}");
             }
         }
@@ -120,7 +120,7 @@ private class RoutingSatUnicastMessageHandler
     private void BroadcastPassThrough(string[] tokenizedMessage, MyIGCMessage rawMessage)
     {
         // if there is ever a reason to use a smaller trans dist then we need to update SafNet
-        IGC.SendBroadcastMessage(tokenizedMessage[2], rawMessage.Data, TransmissionDistance.TransmissionDistanceMax);
+        IGC.SendBroadcastMessage(tokenizedMessage[2], rawMessage.Data.ToString(), TransmissionDistance.TransmissionDistanceMax);
     }
 
     private void UnicastPassThrough(string[] tokenizedMessage, MyIGCMessage rawMessage)
@@ -130,15 +130,15 @@ private class RoutingSatUnicastMessageHandler
             throw new System.Exception($"Malformed pass through tag {rawMessage.Tag}");
         }
 
-        IGC.SendUnicastMessage(Convert.ToInt64(tokenizedMessage[2]), tokenizedMessage[3], rawMessage.Data);
+        IGC.SendUnicastMessage(Convert.ToInt64(tokenizedMessage[2]), tokenizedMessage[3], rawMessage.Data.ToString());
     }
 
     private void ErrorResponse(MyIGCMessage orgMessage, System.Exception e)
     {
-        RespondToCaller(orgMessage, $"{SatName}/Error", (object) e.Message);
+        RespondToCaller(orgMessage, $"{SatName}/Error", e.Message);
     }
 
-    private void RespondToCaller(MyIGCMessage orgMessage, string tag, object data)
+    private void RespondToCaller(MyIGCMessage orgMessage, string tag, string data)
     {
         IGC.SendUnicastMessage(orgMessage.Source, tag, data);
     }

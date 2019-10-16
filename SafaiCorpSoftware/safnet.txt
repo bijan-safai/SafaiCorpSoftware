@@ -6,12 +6,25 @@ THE SAFAICORP SPACE SAT COMM PROTOCOL
 
 This document defines the communication protocol used by SafaiCorp assets to commuicate through SafaiCorp communication satellites.
 
+Note: "satellite" is a generic term here, safnet can be used to as a router for any kind of Grid Communication
+
+This doc assumes the reader understands the diffrence between unicast and broadcast. A short explenation will be given here.
+
+In short Unicast messages send a message to a recivier with a specific UnicastId (think address or ip address) where as Broadcast messages are sent to all blocks
+in the broadcast range which are lisiting to the tag the broadcast message is tagged with (think radio frequency or tv chanels). These are space egineers api concepts and exsist underneath safnet.
+
+The messages sent by Unicast and BroadCast are the same. They contain a string tag, and then some kind of data. This data can be any object.
+
+
+-----------------------SafNet Definition------------------------
+
+
 Assets may communicate with satellites in two ways:
     1. Broadcast messages to aquire the comm satellites unicast address
     2. Unicast messages to a specific satellite.
 Both protocols will be defined in full now.
 
-1. Broadcast messages 
+1. Broadcast messages // TODO change broadcast response to unicast response, no reason to blast the sat name all over the galaxy
 
     Broadcast messages will ONLY be used to aquire ComSats unicast Ids. This can be done in two ways.
     If you know the name of the satellite whos Id you want then simply broadcast a message with the tag:
@@ -36,7 +49,7 @@ Both protocols will be defined in full now.
     Tags will esseintaly serve as serialized instuction sets, and will be read from left to right.
     Individal tag elements will be deliminiated by the '/' char. This char is reserved and CANNOT be used anywhere else in the tag.
     The leftmost tag element will be referred to as the top level tag, all others will be referred to as subtags.
-    There are two allowed top level tags:
+    There are three allowed top level tags:
         Pass        // for pass through
         Script      // for sat specific script execution
         Ping        // basic ping
@@ -61,7 +74,7 @@ Both protocols will be defined in full now.
         Uni
         Broad
     The subtags of the two differ slightly. Broadcasts require only a tag for communication, however unicasts require a specific address, therefore, immidetly 
-    following a Uni tag the address must be provided as a subtag. This address tag is considerd an element of the ComMethod tag Other then that the tag structure is identical.
+    following a Uni tag the address must be provided as a subtag. This address tag is considerd an element of the ComMethod tag. Other then that the tag structure is identical.
 
     After the ComMethod tag(s) there is one more required tag. The actual tag to be passed through to the callee. This tag can take any form but CANNOT contain the '/' char.
     
@@ -70,18 +83,11 @@ Both protocols will be defined in full now.
     Pass/Uni/{UnicastId}/{Tag}
     Pass/Broad/{Tag}
 
-    If the tag is properly parsed then it will be used to pass through whatever is in the data of the message to the callee.
+    If the tag is properly parsed then it will be used to pass through whatever is in the data of the message to the callee as a string.
 
-    One final note on the pass through protocol. Much like HTTPS the pass through protocol is completly agnostic to the API's which commuicate through it.
-    It should never be used to execute API logic, and the API's can never use the '/' char in there tags. 
-
-    We do have some suggestions about the API's however. Since the data being passed by the MyIGCMessage class is stored as a generic object it can be cast into any object
-    you would like. This is very powerfull and allows for the easy transfer of complex objects accross space, so it is advaisable to imbed the object type in the passed tag.
-    How this is achived is up to the API, but this document will define a recommonded convention for embedding it in the passed through tag.
-
-    {Tag};{Object type}
-
-    This will not be enforced, but is considerd best practice
+    One final note on the pass through protocol. Much like HTTPS the pass through protocol is completly agnostic to the API's which commuicate through it. 
+    HOWEVER 
+    !!!!!!!! ALL DATA IS SENT AS A STRING SO BE READY TO PARSE IT ON THE OTHER SIDE !!!!!!!!!
 
 ERROR handeling
     In the event of an invalid message or general execution error, the caller will be sent a unicast message with a tag formatted as
@@ -89,4 +95,6 @@ ERROR handeling
     and an error message in the Data portion as a string.
 
 Possible improvments:
-    If we can ever think of a reason to use a specific broadcast range the maybe we embed that as a final optional tag....
+    If we can ever think of a reason to use a specific broadcast range the maybe we embed that as a final optional tag.
+    It would be great if we didnt have to send everything as strings and pass generic objects around.
+    We should add basic auth for multiplayer. It doesent have to be great and if someone takes the time to crack it then GOOD FOR THEM ITS A FUCKING GAME THEY CAN FUCK WITH OUR NETWORK.
