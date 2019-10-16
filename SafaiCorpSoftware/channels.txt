@@ -1,0 +1,4 @@
+Define broadcast tags here. Say what they are for. Check for collisions. Include format if it is conditionaly formmated tag
+
+Aquire_All_CommSat_UnicastId - For mass aquiring comstat UnicastIds
+Aquire_{SatName}_UnicastId - For aquiring a speicifc comstat UnicastId
