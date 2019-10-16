@@ -1,0 +1,92 @@
+THE SAFAICORP SPACE SAT COMM PROTOCOL 
+
+            AKA
+        
+           SAFNET
+
+This document defines the communication protocol used by SafaiCorp assets to commuicate through SafaiCorp communication satellites.
+
+Assets may communicate with satellites in two ways:
+    1. Broadcast messages to aquire the comm satellites unicast address
+    2. Unicast messages to a specific satellite.
+Both protocols will be defined in full now.
+
+1. Broadcast messages 
+
+    Broadcast messages will ONLY be used to aquire ComSats unicast Ids. This can be done in two ways.
+    If you know the name of the satellite whos Id you want then simply broadcast a message with the tag:
+        Aquire_{SatNameHere}_UnicastId
+    And listen for the tag:
+        Provide_{SatName}_UnicastId
+    The unicast id will be transmmited in the data of the message.
+
+    If you are trying to communicate with any satellite and wish to aquire the addresses of all satellites which you
+    are capable of communicating with then broadcast with the tag:
+        Aquire_All_CommSat_UnicastId
+    And listen for the tag:
+        Provide_All_CommSat_UnicastId
+    The data of the message will be formated as : {SatName}/{UnicastId}
+
+    ALL OTHER COMMUINCATION MUST BE DONE THROUGH UNICAST, COMSATS LISTEN TO NO OTHER TAGS
+    Note: As multiplayer becomes a thing we may want to add some kind of auth layer
+
+2. Unicast messages
+
+    The handeling of unicast messages will always be detirmened by the tag of the message.
+    Tags will esseintaly serve as serialized instuction sets, and will be read from left to right.
+    Individal tag elements will be deliminiated by the '/' char. This char is reserved and CANNOT be used anywhere else in the tag.
+    The leftmost tag element will be referred to as the top level tag, all others will be referred to as subtags.
+    There are two allowed top level tags:
+        Pass        // for pass through
+        Script      // for sat specific script execution
+        Ping        // basic ping
+    
+    Ping : 
+    
+    The Ping tag takes no other subtags. It will simply respond to the caller with the tag "Ping/{SatName}" and the version of SafNet being used in the data of the message as a string. This will be a 
+    unicast response.
+    
+    Script:
+
+    The script tag will allow specific satellites to handle lightweight subrutines which requre communication. The format is defined as
+        Script/{script name}/{args}
+    The satellite will pass the args direcly to the script, so the format is up to the implementation but the '/' char CANNOT be used in the args.
+    Scripts should only be executed on the satellite if they require communication with a large number of assets, and should be limited to data collection
+    and aggragation. Any more complex logic should be offloaded to the calling block.
+
+    Pass:
+
+    The Pass tag allows the sat to pass messages through to assets not capable of communicating whith eachother directly. It has two second level subtags, 
+    corrisponding to the two possible modes of transmmiting messages, Unicast and Broadcast. These tags will be referred to as the ComMethod tags
+        Uni
+        Broad
+    The subtags of the two differ slightly. Broadcasts require only a tag for communication, however unicasts require a specific address, therefore, immidetly 
+    following a Uni tag the address must be provided as a subtag. This address tag is considerd an element of the ComMethod tag Other then that the tag structure is identical.
+
+    After the ComMethod tag(s) there is one more required tag. The actual tag to be passed through to the callee. This tag can take any form but CANNOT contain the '/' char.
+    
+    Below are the two formats of the Pass tag:
+
+    Pass/Uni/{UnicastId}/{Tag}
+    Pass/Broad/{Tag}
+
+    If the tag is properly parsed then it will be used to pass through whatever is in the data of the message to the callee.
+
+    One final note on the pass through protocol. Much like HTTPS the pass through protocol is completly agnostic to the API's which commuicate through it.
+    It should never be used to execute API logic, and the API's can never use the '/' char in there tags. 
+
+    We do have some suggestions about the API's however. Since the data being passed by the MyIGCMessage class is stored as a generic object it can be cast into any object
+    you would like. This is very powerfull and allows for the easy transfer of complex objects accross space, so it is advaisable to imbed the object type in the passed tag.
+    How this is achived is up to the API, but this document will define a recommonded convention for embedding it in the passed through tag.
+
+    {Tag};{Object type}
+
+    This will not be enforced, but is considerd best practice
+
+ERROR handeling
+    In the event of an invalid message or general execution error, the caller will be sent a unicast message with a tag formatted as
+    "{SatName}/Error"
+    and an error message in the Data portion as a string.
+
+Possible improvments:
+    If we can ever think of a reason to use a specific broadcast range the maybe we embed that as a final optional tag....
