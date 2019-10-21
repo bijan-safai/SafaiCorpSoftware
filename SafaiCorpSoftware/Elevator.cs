@@ -3,12 +3,16 @@ private MyCommandLine cmd;
 private IMyTextPanel OutPanel;
 
 //
-private const string ElePistonBlockName = "ele_pistons";
+private List<IMyPistonBase> ElePistonsList;
+private const string ElePistonGroupName = "ele_pistons";
 private float[] EleFloorHeights = {0f,17f,34.5f,52f,69.5f,87f};
+private Elevator CurrElevator;
+
 // private PistonGrid ElePistons;
 
 public Program(){
     OutPanel = GridTerminalSystem.GetBlockWithName("Test_LCD") as IMyTextPanel;
+    
     cmd = new MyCommandLine();
 
     // CurrElevator = new Elevator();
@@ -16,8 +20,13 @@ public Program(){
 
 public void Main(string argument, UpdateType updateSource){
     try {
+        //Setup can be moved out of execution
         int floor_input = Int32.Parse(argument);
-        CurrElevator = new Elevator(ElePistonBlockName,EleFloorHeights);
+        IMyBlockGroup ElePistonsGroup = GridTerminalSystem.GetBlockGroupWithName(ElePistonGroupName);
+        ElePistonsGroup.GetBlocksOfType<IMyPistonBase>(ElePistonsList);
+
+        CurrElevator = new Elevator(ElePistonsList,EleFloorHeights);
+        //Current
         CurrElevator.GoToFloor(floor_input);
         OutPanel.WriteText("Going to floor " + argument + "\n", true);
     } catch {
@@ -27,14 +36,14 @@ public void Main(string argument, UpdateType updateSource){
 }
 
 public class Elevator{
+    
     private List<IMyPistonBase> ElePistons;
     private float[] EleFloorHeights;
     private float PistSpeed = 0.5f;
-    public Elevator(string PistonsGroupName, float[] FloorHeights)
+    public Elevator(List<IMyPistonBase> ElePistonsList, float[] FloorHeights)
     {
         //Instatiate: Provide Group name and floor heights
-        IMyBlockGroup ElePistonsGroup = GridTerminalSystem.GetBlockGroupWithName(PistonsGroupName);
-        ElePistonsGroup.GetBlocksOfType<IMyPistonBase>(ElePistons);
+        ElePistons = ElePistonsList;
         EleFloorHeights = FloorHeights;
     }
     public void GoToFloor(int floor){
