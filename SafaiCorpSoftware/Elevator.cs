@@ -12,57 +12,58 @@ private Elevator CurrElevator;
 
 public Program(){
     OutPanel = GridTerminalSystem.GetBlockWithName("Test_LCD") as IMyTextPanel;
-    
     cmd = new MyCommandLine();
 
-    // CurrElevator = new Elevator();
+    //Setup:
+    ElePistonsList = new List<IMyPistonBase>();
+    IMyBlockGroup ElePistonsGroup = GridTerminalSystem.GetBlockGroupWithName(ElePistonGroupName);
+    ElePistonsGroup.GetBlocksOfType<IMyPistonBase>(ElePistonsList);
+    CurrElevator = new Elevator(ElePistonsList,EleFloorHeights, OutPanel);
+
 }
 
 public void Main(string argument, UpdateType updateSource){
-    try {
-        //Setup can be moved out of execution
-        int floor_input = Int32.Parse(argument);
-        IMyBlockGroup ElePistonsGroup = GridTerminalSystem.GetBlockGroupWithName(ElePistonGroupName);
-        ElePistonsGroup.GetBlocksOfType<IMyPistonBase>(ElePistonsList);
-
-        CurrElevator = new Elevator(ElePistonsList,EleFloorHeights);
-        //Current
-        CurrElevator.GoToFloor(floor_input);
-        OutPanel.WriteText("Going to floor " + argument + "\n", true);
-    } catch {
-        OutPanel.WriteText("Non-Int value provided...\n", true);
-        
-    }
+    int floor_input = Int32.Parse(argument);
+    OutPanel.WriteText("Going to floor " + floor_input.ToString()+ "\n", false);
+    CurrElevator.GoToFloor(floor_input);
 }
 
 public class Elevator{
-    
+
+    private IMyTextPanel LogPanel;
     private List<IMyPistonBase> ElePistons;
     private float[] EleFloorHeights;
     private float PistSpeed = 0.5f;
-    public Elevator(List<IMyPistonBase> ElePistonsList, float[] FloorHeights)
+    public Elevator(List<IMyPistonBase> ElePistonsList, float[] FloorHeights, IMyTextPanel OutPanel)
     {
         //Instatiate: Provide Group name and floor heights
         ElePistons = ElePistonsList;
         EleFloorHeights = FloorHeights;
+        LogPanel = OutPanel;
     }
     public void GoToFloor(int floor){
         float CurrentHeight = GetElevatorHeight(this.ElePistons);
         float TargetHeight = this.EleFloorHeights[floor];
         float Delta = TargetHeight - CurrentHeight;
         float pDelt = Delta/this.ElePistons.Count;
+ 
+        LogPanel.WriteText("Current Height: " + CurrentHeight.ToString() + "\n", true);
+        LogPanel.WriteText("Target Height: " + TargetHeight.ToString() + "\n", true);
+
         if(Delta < 0f){
+            LogPanel.WriteText("Going down... \n", true);
             foreach(IMyPistonBase p in this.ElePistons){
-                p.SetValueFloat("MinLimit", pDelt);
-                p.SetValueFloat("Velocity",this.PistSpeed * -1f);
-                p.SetValueFloat("MaxLimit", 10);
+                p.MinLimit = pDelt;
+                p.Velocity = this.PistSpeed * -1f;
+                p.MaxLimit = 10;
             }
         }
         else if(Delta > 0f){
+            LogPanel.WriteText("Going Up... \n", true);
             foreach(IMyPistonBase p in this.ElePistons){
-                p.SetValueFloat("MaxLimit", pDelt);
-                p.SetValueFloat("Velocity",this.PistSpeed);
-                p.SetValueFloat("MinLimit", 10);
+                p.MaxLimit = pDelt;
+                p.Velocity = this.PistSpeed;
+                p.MinLimit = 10;
             }
         }
 
@@ -71,6 +72,7 @@ public class Elevator{
     private float GetElevatorHeight(List<IMyPistonBase> ElePistons){
         float h = 0f;
         foreach(IMyPistonBase p in ElePistons){
+            LogPanel.WriteText("Current velocity: " + p.Velocity.ToString() + "\n");
             if(p.Velocity < 0f){
                 h = h + p.MinLimit;
             } else {
