@@ -19,7 +19,7 @@ public void Main(string argument, UpdateType updateSource){
         int floor_input = Int32.Parse(argument);
         CurrElevator = new Elevator(ElePistonBlockName,EleFloorHeights);
         CurrElevator.GoToFloor(floor_input);
-        OutPanel.WriteText("Going to floor\n", true);
+        OutPanel.WriteText("Going to floor " + argument + "\n", true);
     } catch {
         OutPanel.WriteText("Non-Int value provided...\n", true);
         
