@@ -11,7 +11,7 @@ private Elevator CurrElevator;
 // private PistonGrid ElePistons;
 
 public Program(){
-    OutPanel = GridTerminalSystem.GetBlockWithName("Test_LCD") as IMyTextPanel;
+    OutPanel = GridTerminalSystem.GetBlockWithName("ele_lcd") as IMyTextPanel;
     cmd = new MyCommandLine();
 
     //Setup:
@@ -28,12 +28,8 @@ public void Main(string argument, UpdateType updateSource){
     if(floor_input > EleFloorHeights.Count()){
         OutPanel.WriteText("Max floor = " + EleFloorHeights.Count().ToString());
     } else {
-        OutPanel.WriteText("Going to floor " + floor_input.ToString()+ "\n", false);
         CurrElevator.GoToFloor(floor_input);
     }
-    
-
-    
 }
 
 public class Elevator{
@@ -55,12 +51,8 @@ public class Elevator{
         float Delta = TargetHeight - CurrentHeight;
         float pDelt = TargetHeight/this.ElePistons.Count;
 
-        LogPanel.WriteText("Current Height: " + CurrentHeight.ToString() + "\n", true);
-        LogPanel.WriteText("Target Height: " + TargetHeight.ToString() + "\n", true);
-        LogPanel.WriteText("Each Piston Height: " + pDelt.ToString() + "\n", true);
-
         if(Delta < 0f){
-            LogPanel.WriteText("Going down... \n", true);
+            LogPanel.WriteText("Going down. Floor " + floor.ToString() , false);
             foreach(IMyPistonBase p in this.ElePistons){
                 p.MinLimit = pDelt;
                 p.Velocity = this.PistSpeed * -1f;
@@ -68,20 +60,18 @@ public class Elevator{
             }
         }
         else if(Delta > 0f){
-            LogPanel.WriteText("Going Up... \n", true);
+            LogPanel.WriteText("Going up. Floor " + floor.ToString() , false);
             foreach(IMyPistonBase p in this.ElePistons){
                 p.MaxLimit = pDelt;
                 p.Velocity = this.PistSpeed;
-                p.MinLimit = 10;
+                p.MinLimit = 0;
             }
         }
-
     }
 
     private float GetElevatorHeight(List<IMyPistonBase> ElePistons){
         float h = 0f;
         foreach(IMyPistonBase p in ElePistons){
-            LogPanel.WriteText("Current velocity: " + p.Velocity.ToString() + "\n");
             if(p.Velocity < 0f){
                 h = h + p.MinLimit;
             } else {
