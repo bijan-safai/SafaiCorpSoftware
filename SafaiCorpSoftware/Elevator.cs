@@ -5,7 +5,7 @@ private IMyTextPanel OutPanel;
 //
 private List<IMyPistonBase> ElePistonsList;
 private const string ElePistonGroupName = "ele_pistons";
-private float[] EleFloorHeights = {0f,17f,34.5f,52f,69.5f,87f};
+private float[] EleFloorHeights = {0f,17f,34.5f,52f,69.5f,87f,104.5f};
 private Elevator CurrElevator;
 
 // private PistonGrid ElePistons;
@@ -24,8 +24,16 @@ public Program(){
 
 public void Main(string argument, UpdateType updateSource){
     int floor_input = Int32.Parse(argument);
-    OutPanel.WriteText("Going to floor " + floor_input.ToString()+ "\n", false);
-    CurrElevator.GoToFloor(floor_input);
+    
+    if(floor_input > EleFloorHeights.Count()){
+        OutPanel.WriteText("Max floor = " + EleFloorHeights.Count().ToString());
+    } else {
+        OutPanel.WriteText("Going to floor " + floor_input.ToString()+ "\n", false);
+        CurrElevator.GoToFloor(floor_input);
+    }
+    
+
+    
 }
 
 public class Elevator{
@@ -45,10 +53,11 @@ public class Elevator{
         float CurrentHeight = GetElevatorHeight(this.ElePistons);
         float TargetHeight = this.EleFloorHeights[floor];
         float Delta = TargetHeight - CurrentHeight;
-        float pDelt = Delta/this.ElePistons.Count;
- 
+        float pDelt = TargetHeight/this.ElePistons.Count;
+
         LogPanel.WriteText("Current Height: " + CurrentHeight.ToString() + "\n", true);
         LogPanel.WriteText("Target Height: " + TargetHeight.ToString() + "\n", true);
+        LogPanel.WriteText("Each Piston Height: " + pDelt.ToString() + "\n", true);
 
         if(Delta < 0f){
             LogPanel.WriteText("Going down... \n", true);
